@@ -19,9 +19,11 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.yellow,
       ),
-      home: const MyHomePage(title: 'Attendance App'),
+      home: const MyHomePage(
+        title: "Attendance App",
+      ),
     );
   }
 }
@@ -80,6 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text(widget.title),
       ),
@@ -87,31 +90,35 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           children: [
             const Padding(
-              padding: EdgeInsets.fromLTRB(8.0, 14, 8, 0),
+              padding: EdgeInsets.fromLTRB(8.0, 250, 8, 20),
               child: Text(
                 "Student's Name",
                 style: TextStyle(
                   fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: Colors.white,
                 ),
               ),
             ),
-            Padding(
+            Container(
               padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+              margin: const EdgeInsets.fromLTRB(15, 0, 15, 10),
+              decoration: const BoxDecoration(
+                color: Colors.grey,
+                borderRadius: BorderRadius.all(Radius.circular(30)),
+              ),
               child: TextFormField(
                 controller: myController,
                 textAlign: TextAlign.start,
                 style: const TextStyle(
-                  fontSize: 20,
-                  color: Colors.black,
+                 backgroundColor: Colors.transparent,
+                  color: Colors.white,
                 ),
               ),
             ),
             IconButton(
               icon: const Icon(
                 Icons.camera_alt,
-                color: Colors.black,
+                color: Colors.white,
               ),
               splashColor: Colors.transparent,
               onPressed: () => openCamera(myController.text),
@@ -120,7 +127,43 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+
+    showAlertDialog(BuildContext context) {
+      // Set up the button
+      Widget okButton = FlatButton(
+        child: Text("Ok"),
+        textColor: Colors.white,
+        onPressed: () {
+          Navigator.of(context).pushNamed("/LoginPage");
+        },
+      );
+
+      // Set up the AlertDialog
+      AlertDialog alert = AlertDialog(
+        backgroundColor: Colors.black,
+        title: const Text(
+          "Incorrect Credentials",
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          "Incorrect Password or Email",
+          style: TextStyle(color: Colors.white),
+        ),
+        actions: [
+          okButton,
+        ],
+      );
+
+      // Show the dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return alert;
+        },
+      );
+    }
   }
+
 
   ListView _buildListView() {
     return ListView.builder(
@@ -132,7 +175,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Container(
               width: MediaQuery.of(context).size.width,
               padding: const EdgeInsets.fromLTRB(4, 3, 4, 3),
-              margin: const EdgeInsets.fromLTRB(10, 5, 10, 10),
+              margin: const EdgeInsets.fromLTRB(20, 5, 20, 10),
               decoration: const BoxDecoration(
                 shape: BoxShape.rectangle,
                 borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -143,7 +186,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 trailing: IconButton(
                   icon: const Icon(
                     Icons.camera_alt,
-                    color: Colors.black,
+                    color: Colors.white,
                   ),
                   splashColor: Colors.transparent,
                   onPressed: () => openCamera(myController.text),
@@ -151,7 +194,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 title: const Text(
                   "Student 1",
                   style: TextStyle(
-                    color: Colors.black,
+                    color: Colors.white,
                     fontSize: 17,
                   ),
                 ),
@@ -160,4 +203,5 @@ class _MyHomePageState extends State<MyHomePage> {
           );
         });
   }
+
 }
