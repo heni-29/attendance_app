@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_native_image/flutter_native_image.dart';
 
 void main() {
   runApp(const MyApp());
@@ -37,39 +38,43 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   File? image;
 
-  Future<Uint8List> _readFileByte(String filePath) async {
-    Uri myUri = Uri.parse(filePath);
-    File audioFile = new File.fromUri(myUri);
-    Uint8List bytes="fs" as Uint8List;
-    await audioFile.readAsBytes().then((value) {
-      bytes = Uint8List.fromList(value);
-      print('reading of bytes is completed');
-    }).catchError((onError) {
-      print('Exception Error while reading audio from path:' +
-          onError.toString());
-    });
-    print(bytes.toString());
-    return bytes;
+  final myController = TextEditingController();
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is removed from the
+    // widget tree.
+    myController.dispose();
+    super.dispose();
   }
 
-  Future openCamera() async {
+  Future openCamera(String name) async {
     final image = await ImagePicker().pickImage(source: ImageSource.camera);
     if (image == null) return;
 
     final imageTemporary = File(image.path);
     this.image = imageTemporary;
-    print(imageTemporary);
-    // Uint8List bytes1="fs" as Uint8List;
-    final bytes=File(imageTemporary.path).readAsBytesSync();
-    String ok=base64Encode(bytes);
-    print(ok);
-    //_readFileByte(imageTemporary.path);
+    File compressedFile = await FlutterNativeImage.compressImage(
+        imageTemporary.path,
+        quality: 10);
+    List<int> bytes = File(compressedFile.path).readAsBytesSync();
+    String ok = base64Encode(bytes);
+    // print(compressedFile);
+    print(ok.length);
 
-    /*File imageFile = File(imageTemporary.path);
-    Uint8List imagebytes = await imageFile.readAsBytes();
-    String base64String = base64.encode(imagebytes);
-    print(base64String);*/
+    var uri1 = Uri.https(
+        'n86gekya23.execute-api.ap-south-1.amazonaws.com', '/initial');
+    http.Response response = await http.post(
+      uri1,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{'data': ok, 'name': name}),
+    );
 
+    Map data = await json.decode(response.body);
+    List answer = data['body']['FaceMatches'];
+    print(answer);
   }
 
   @override
@@ -95,6 +100,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
               child: TextFormField(
+                controller: myController,
                 textAlign: TextAlign.start,
                 style: const TextStyle(
                   fontSize: 20,
@@ -108,12 +114,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 color: Colors.black,
               ),
               splashColor: Colors.transparent,
-              onPressed: () => openCamera(),
-
+              onPressed: () => openCamera(myController.text),
             ),
           ],
         ),
-      ),     // This trailing comma makes auto-formatting nicer for build methods.
+      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 
@@ -123,8 +128,7 @@ class _MyHomePageState extends State<MyHomePage> {
         itemCount: 5,
         itemBuilder: (_, index) {
           return GestureDetector(
-            onTap: () async {
-            },
+            onTap: () async {},
             child: Container(
               width: MediaQuery.of(context).size.width,
               padding: const EdgeInsets.fromLTRB(4, 3, 4, 3),
@@ -135,15 +139,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 color: Colors.grey,
               ),
               child: ListTile(
-                leading: const Icon(Icons.person_outline,
-                    color: Colors.black),
+                leading: const Icon(Icons.person_outline, color: Colors.black),
                 trailing: IconButton(
                   icon: const Icon(
                     Icons.camera_alt,
                     color: Colors.black,
                   ),
                   splashColor: Colors.transparent,
-                  onPressed: () => openCamera(),
+                  onPressed: () => openCamera(myController.text),
                 ),
                 title: const Text(
                   "Student 1",
@@ -157,5 +160,4 @@ class _MyHomePageState extends State<MyHomePage> {
           );
         });
   }
-
 }
