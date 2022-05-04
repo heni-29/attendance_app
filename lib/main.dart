@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:attendance_app/attendance_page.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
@@ -39,6 +40,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   File? image;
+  bool status =false;
 
   final myController = TextEditingController();
 
@@ -48,6 +50,18 @@ class _MyHomePageState extends State<MyHomePage> {
     // widget tree.
     myController.dispose();
     super.dispose();
+  }
+
+  Future update_Attendance(String name) async {
+    var uri1 =
+    Uri.https('zaba4768m0.execute-api.ap-south-1.amazonaws.com', '/update_attendance');
+    http.Response response = await http.post(
+      uri1,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{'name': name.toString()}),
+    );
   }
 
   Future openCamera(String name) async {
@@ -76,7 +90,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
     Map data = await json.decode(response.body);
     List answer = data['body']['FaceMatches'];
-    print(answer);
+    // print(answer);
+    // print(answer.length);
+    if(answer.length>0){
+      setState(() {
+        status=true;
+      });
+    }
   }
 
   @override
@@ -90,7 +110,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           children: [
             const Padding(
-              padding: EdgeInsets.fromLTRB(8.0, 250, 8, 20),
+              padding: EdgeInsets.fromLTRB(8.0, 150, 8, 20),
               child: Text(
                 "Student's Name",
                 style: TextStyle(
@@ -121,87 +141,81 @@ class _MyHomePageState extends State<MyHomePage> {
                 color: Colors.white,
               ),
               splashColor: Colors.transparent,
-              onPressed: () => openCamera(myController.text),
+              onPressed: () => openCamera(myController.text).whenComplete(() =>{
+                if(status==true){
+                  showAlertDialog(context, "Attendance Marked",myController.text),
+
+                }else{
+                  showAlertDialog(context, "Invalid User",myController.text)
+                }
+                // status=false;
+              }),
             ),
+            Container(
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(20)),
+                color: Colors.yellow
+              ),
+              child: TextButton(
+                  onPressed: () {
+                    Navigator.of(context, rootNavigator: true).push(
+                        MaterialPageRoute(builder: (context) => const attendancePage()));
+                  },
+                  child: const Text(
+                    "Show Attendance",
+                    style: TextStyle(
+                      color: Colors.black,
+                      //backgroundColor: Colors.yellow,
+                    ),
+
+                  )),
+            )
           ],
         ),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
 
-    showAlertDialog(BuildContext context) {
-      // Set up the button
-      Widget okButton = FlatButton(
-        child: Text("Ok"),
-        textColor: Colors.white,
-        onPressed: () {
-          Navigator.of(context).pushNamed("/LoginPage");
-        },
-      );
 
-      // Set up the AlertDialog
-      AlertDialog alert = AlertDialog(
-        backgroundColor: Colors.black,
-        title: const Text(
-          "Incorrect Credentials",
-          style: TextStyle(color: Colors.white),
-        ),
-        content: const Text(
-          "Incorrect Password or Email",
-          style: TextStyle(color: Colors.white),
-        ),
-        actions: [
-          okButton,
-        ],
-      );
+  }
+  showAlertDialog(BuildContext context,String data,String name) {
+    // Set up the button
+    Widget okButton = FlatButton(
+      child: Text("Ok"),
+      textColor: Colors.white,
+      onPressed: () {
+        if(status==true){
+          update_Attendance(name);
+        }
+        status=false;
+        Navigator.pop(context);
+      },
+    );
 
-      // Show the dialog
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return alert;
-        },
-      );
-    }
+    // Set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      backgroundColor: Colors.black,
+      title: const Text(
+        "Attendance App",
+        style: TextStyle(color: Colors.white),
+      ),
+      content:Text(
+        data.toString(),
+        style: TextStyle(color: Colors.white),
+      ),
+      actions: [
+        okButton,
+      ],
+    );
+
+    // Show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
   }
 
 
-  ListView _buildListView() {
-    return ListView.builder(
-        shrinkWrap: true,
-        itemCount: 5,
-        itemBuilder: (_, index) {
-          return GestureDetector(
-            onTap: () async {},
-            child: Container(
-              width: MediaQuery.of(context).size.width,
-              padding: const EdgeInsets.fromLTRB(4, 3, 4, 3),
-              margin: const EdgeInsets.fromLTRB(20, 5, 20, 10),
-              decoration: const BoxDecoration(
-                shape: BoxShape.rectangle,
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                color: Colors.grey,
-              ),
-              child: ListTile(
-                leading: const Icon(Icons.person_outline, color: Colors.black),
-                trailing: IconButton(
-                  icon: const Icon(
-                    Icons.camera_alt,
-                    color: Colors.white,
-                  ),
-                  splashColor: Colors.transparent,
-                  onPressed: () => openCamera(myController.text),
-                ),
-                title: const Text(
-                  "Student 1",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                  ),
-                ),
-              ),
-            ),
-          );
-        });
-  }
 
 }
